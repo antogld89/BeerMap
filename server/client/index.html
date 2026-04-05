@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🍺 BeerMap</title>
+
+  <!-- Leaflet CSS — la bibliothèque de cartes -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- PAGE AUTHENTIFICATION (affichée si non connecté)      -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div id="auth-page" class="page">
+    <div class="auth-container">
+      <div class="auth-logo">
+        <span class="logo-icon">🍺</span>
+        <h1 class="logo-text">BeerMap</h1>
+        <p class="logo-tagline">Ta vie, tes bières, sur la carte.</p>
+      </div>
+
+      <!-- Onglets Connexion / Inscription -->
+      <div class="auth-tabs">
+        <button class="tab-btn active" data-tab="login">Connexion</button>
+        <button class="tab-btn" data-tab="register">Inscription</button>
+      </div>
+
+      <!-- Formulaire Connexion -->
+      <div id="tab-login" class="tab-content active">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="ta@biere.fr" />
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="login-password" placeholder="••••••••" />
+        </div>
+        <button class="btn-primary" id="btn-login">Se connecter</button>
+      </div>
+
+      <!-- Formulaire Inscription -->
+      <div id="tab-register" class="tab-content">
+        <div class="form-group">
+          <label>Pseudo</label>
+          <input type="text" id="register-username" placeholder="BeerMaster42" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="register-email" placeholder="ta@biere.fr" />
+        </div>
+        <div class="form-group">
+          <label>Mot de passe (min. 6 caractères)</label>
+          <input type="password" id="register-password" placeholder="••••••••" />
+        </div>
+        <button class="btn-primary" id="btn-register">Créer mon compte</button>
+      </div>
+
+      <!-- Message d'erreur/succès -->
+      <div id="auth-message" class="message hidden"></div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- PAGE PRINCIPALE (carte + interface)                   -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div id="main-page" class="page hidden">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <span class="header-logo">🍺</span>
+        <span class="header-title">BeerMap</span>
+      </div>
+      <nav class="header-nav">
+        <button class="nav-btn active" data-view="map">🗺️ Carte</button>
+        <button class="nav-btn" data-view="profile">👤 Profil</button>
+        <button class="nav-btn logout-btn" id="btn-logout">Déconnexion</button>
+      </nav>
+    </header>
+
+    <!-- ── VUE CARTE ──────────────────────────────────────── -->
+    <div id="view-map" class="view active">
+      <!-- La carte Leaflet s'affiche ici -->
+      <div id="map"></div>
+
+      <!-- Bouton flottant pour ajouter une bière -->
+      <button class="fab" id="btn-add-beer" title="Ajouter une bière">
+        <span class="fab-icon">+</span>
+      </button>
+
+      <!-- Loader pendant la géolocalisation -->
+      <div id="map-loader" class="map-loader hidden">
+        <div class="loader-spinner"></div>
+        <span>Localisation en cours...</span>
+      </div>
+    </div>
+
+    <!-- ── VUE PROFIL ─────────────────────────────────────── -->
+    <div id="view-profile" class="view hidden">
+      <div class="profile-container">
+        <div class="profile-header">
+          <div class="profile-avatar">🍺</div>
+          <div>
+            <h2 id="profile-username">Chargement...</h2>
+            <p id="profile-email" class="profile-email"></p>
+          </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="stat-total">0</div>
+            <div class="stat-label">Bières bues</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-avg">-</div>
+            <div class="stat-label">Note moyenne</div>
+          </div>
+        </div>
+
+        <!-- Types de bières -->
+        <div class="types-section" id="types-section" style="display:none;">
+          <h3 class="section-title">Mes types préférés</h3>
+          <div id="types-list" class="types-list"></div>
+        </div>
+
+        <!-- Liste des bières -->
+        <h3 class="section-title">Mon historique</h3>
+        <div id="beer-list" class="beer-list">
+          <div class="empty-state">
+            <span>🍻</span>
+            <p>Aucune bière enregistrée pour l'instant.</p>
+            <p>Clique sur + pour ajouter ta première bière !</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- MODAL — Formulaire ajout de bière                     -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div id="modal-add-beer" class="modal hidden">
+    <div class="modal-overlay" id="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🍺 Nouvelle bière</h2>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+
+      <!-- Indicateur de position GPS -->
+      <div id="gps-indicator" class="gps-indicator">
+        <span class="gps-dot loading"></span>
+        <span id="gps-text">Récupération de la position...</span>
+      </div>
+
+      <div class="modal-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom de la bière *</label>
+            <input type="text" id="beer-name" placeholder="Ex: Leffe Blonde" maxlength="100" />
+          </div>
+          <div class="form-group">
+            <label>Type *</label>
+            <select id="beer-type">
+              <option value="">-- Choisir --</option>
+              <option value="Blonde">Blonde</option>
+              <option value="Brune">Brune</option>
+              <option value="Blanche">Blanche</option>
+              <option value="IPA">IPA</option>
+              <option value="Stout">Stout</option>
+              <option value="Ambrée">Ambrée</option>
+              <option value="Lager">Lager</option>
+              <option value="Trappiste">Trappiste</option>
+              <option value="Fruitée">Fruitée</option>
+              <option value="Autre">Autre</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Note avec étoiles -->
+        <div class="form-group">
+          <label>Note *</label>
+          <div class="star-rating" id="star-rating">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+          </div>
+          <input type="hidden" id="beer-rating" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label>Commentaire</label>
+          <textarea id="beer-comment" placeholder="Tes impressions sur cette bière..." maxlength="500" rows="3"></textarea>
+        </div>
+
+        <!-- Message d'erreur du formulaire -->
+        <div id="form-message" class="message hidden"></div>
+
+        <button class="btn-primary" id="btn-submit-beer">
+          <span id="submit-text">Enregistrer la bière 🍺</span>
+          <span id="submit-loader" class="hidden">⏳ Enregistrement...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Notre JavaScript principal -->
+  <script src="app.js"></script>
+</body>
+</html>
