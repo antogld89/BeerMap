@@ -30,7 +30,7 @@ app.use('/api/beers', beerRoutes);  // GET/POST /api/beers
 
 // ─── Route fallback (renvoie index.html pour le SPA) ────────
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
+  res.sendFile(path.join(__dirname, 'client/index.html'));
 });
 
 // ─── Connexion MongoDB ───────────────────────────────────────
