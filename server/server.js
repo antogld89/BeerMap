@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cors());
 
 // Sert les fichiers statiques du dossier client (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static(path.join(__dirname, 'client')));
 
 // ─── Routes API ─────────────────────────────────────────────
 const authRoutes = require('./routes/auth');
@@ -30,7 +30,7 @@ app.use('/api/beers', beerRoutes);  // GET/POST /api/beers
 
 // ─── Route fallback (renvoie index.html pour le SPA) ────────
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
+  res.sendFile(path.join(__dirname, 'client/index.html'));
 });
 
 // ─── Connexion MongoDB ───────────────────────────────────────
