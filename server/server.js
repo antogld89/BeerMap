@@ -38,7 +38,7 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('✅ Connecté à MongoDB');
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🍺 BeerMap tourne sur http://localhost:${PORT}`);
     });
   })
