@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cors());
 
 // Sert les fichiers statiques du dossier client (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, 'client')));
+app.use(express.static(path.join(__dirname, '../client')));
 
 // ─── Routes API ─────────────────────────────────────────────
 const authRoutes = require('./routes/auth');
